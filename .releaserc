@@ -1,0 +1,18 @@
+{
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "config": "conventional-changelog-gitmoji-config"
+      }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "config": "conventional-changelog-gitmoji-config"
+      }
+    ],
+    "@semantic-release/npm",
+    "@semantic-release/github"
+  ]
+}
