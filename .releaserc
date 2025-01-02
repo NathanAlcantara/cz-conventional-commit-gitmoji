@@ -1,4 +1,10 @@
 {
+  "releaseRules": [
+    {
+      "type": "ci",
+      "release": "patch"
+    }
+  ],
   "plugins": [
     [
       "@semantic-release/commit-analyzer",

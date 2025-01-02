@@ -27,6 +27,7 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "^5.4.1",
+    "gitmojis": "^3.14.0",
     "lodash.clonedeep": "^4.5.0",
     "lodash.foreach": "^4.5.0",
     "lodash.includes": "^4.3.0",
@@ -42,7 +43,6 @@
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-mocha": "^10.5.0",
-    "gitmojis": "^3.14.0",
     "globals": "^15.14.0",
     "mocha": "^11.0.1",
     "prettier": "^3.4.2",
