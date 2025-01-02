@@ -29,9 +29,6 @@ const filterEmptyAnswer = (subject) => {
   return subject;
 };
 
-// This can be any kind of SystemJS compatible module.
-// We use Commonjs here, but ES6 or AMD would do just
-// fine.
 export default () => {
   const choices = map(types, (type, key) => {
     return {

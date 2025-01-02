@@ -3,12 +3,16 @@
   "version": "0.0.0-semantically-released",
   "description": "Commitizen adapter following the conventional-changelog format with gitmoji.",
   "type": "module",
-  "exports": "./index.js",
+  "main": "./index.js",
+  "exports": {
+    "import": "./index.js",
+    "require": "./index.cjs"
+  },
   "scripts": {
     "test": "mocha",
     "coverage": "c8 npm run test",
-    "lint": "prettier --check **/*.js && eslint",
-    "format": "prettier --write **/*.js && eslint --fix",
+    "lint": "prettier --check **/*.{js,cjs} && eslint",
+    "format": "prettier --write **/*.{js,cjs} && eslint --fix",
     "commit": "semantic-release"
   },
   "repository": {

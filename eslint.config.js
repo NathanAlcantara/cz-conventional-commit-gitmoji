@@ -13,7 +13,10 @@ const gitignorePath = path.resolve(__dirname, ".gitignore");
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  { languageOptions: { globals: globals.node } },
+  {
+    languageOptions: { globals: globals.node },
+    files: ["*.js", "*.cjs"],
+  },
   pluginJs.configs.recommended,
   mochaPlugin.configs.flat.recommended,
   includeIgnoreFile(gitignorePath),
