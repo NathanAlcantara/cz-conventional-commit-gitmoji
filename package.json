@@ -8,6 +8,11 @@
     "import": "./index.js",
     "require": "./index.cjs"
   },
+  "files": [
+    "index.js",
+    "index.cjs",
+    "src"
+  ],
   "scripts": {
     "test": "mocha",
     "coverage": "c8 npm run test",
