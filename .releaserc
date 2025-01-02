@@ -1,7 +1,7 @@
 {
   "releaseRules": [
     {
-      "type": "ci",
+      "type": "build",
       "release": "patch"
     }
   ],
