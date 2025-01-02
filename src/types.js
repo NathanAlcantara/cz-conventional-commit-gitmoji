@@ -1,71 +1,88 @@
-export default {
+import { gitmojis } from "gitmojis";
+import cloneDeep from "lodash.clonedeep";
+import each from "lodash.foreach";
+import includes from "lodash.includes";
+import map from "lodash.map";
+
+export const typesRaw = {
   feat: {
     title: "Features",
     description: "A new feature",
-    emoji: "✨",
     emojiCode: ":sparkles:",
   },
   fix: {
     title: "Bug Fixes",
     description: "A bug fix",
-    emoji: "🐛",
     emojiCode: ":bug:",
   },
   docs: {
     title: "Documentation",
     description: "Documentation only changes",
-    emoji: "📚",
-    emojiCode: ":books:",
+    emojiCode: ":memo:",
   },
   style: {
     title: "Styles",
     description:
       "Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)",
-    emoji: "💎",
-    emojiCode: ":gem:",
+    emojiCode: ":art:",
   },
   refactor: {
     title: "Code Refactoring",
     description: "A code change that neither fixes a bug nor adds a feature",
-    emoji: "📦",
     emojiCode: ":package:",
   },
   perf: {
     title: "Performance Improvements",
     description: "A code change that improves performance",
-    emoji: "🚀",
     emojiCode: ":rocket:",
   },
   test: {
     title: "Tests",
     description: "Adding missing tests or correcting existing tests",
-    emoji: "🚨",
-    emojiCode: ":rotating_light:",
+    emojiCode: ":test_tube:",
   },
   build: {
     title: "Builds",
     description:
       "Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)",
-    emoji: "🛠 ",
-    emojiCode: ":hammer_and_wrench:",
+    emojiCode: ":construction_worker:",
   },
   ci: {
     title: "Continuous Integrations",
     description:
       "Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)",
-    emoji: "⚙️ ",
-    emojiCode: ":gear:",
+    emojiCode: ":recycle:",
   },
   chore: {
     title: "Chores",
     description: "Other changes that don't modify src or test files",
-    emoji: "♻️ ",
-    emojiCode: ":recycle:",
+    emojiCode: ":pencil2:",
   },
   revert: {
     title: "Reverts",
     description: "Reverts a previous commit",
-    emoji: "🗑 ",
-    emojiCode: ":wastebasket:",
+    emojiCode: ":rewind:",
   },
 };
+
+export function getChoices() {
+  const types = cloneDeep(typesRaw);
+  each(Object.entries(types), ([key, type]) => {
+    const gitmoji = gitmojis.find((gitmoji) => gitmoji.code === type.emojiCode);
+
+    if (!gitmoji) {
+      throw new Error(`Gitmoji not found for ${type.emojiCode}`);
+    } else if (includes([":recycle:", ":pencil2:"], type.emojiCode)) {
+      gitmoji.emoji = `${gitmoji.emoji} `;
+    }
+
+    types[key].emoji = gitmoji.emoji;
+  });
+
+  return map(types, (type, key) => {
+    return {
+      value: `${type.emojiCode} ${key}`,
+      name: `${type.emoji} ${key}:\t${type.description}`,
+    };
+  });
+}

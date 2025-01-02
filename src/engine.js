@@ -1,7 +1,6 @@
 import chalk from "chalk";
-import map from "lodash.map";
 import wrap from "word-wrap";
-import types from "./types.js";
+import { getChoices } from "./types.js";
 
 const filter = (array) => {
   return array.filter((x) => {
@@ -30,12 +29,7 @@ const filterEmptyAnswer = (subject) => {
 };
 
 export default () => {
-  const choices = map(types, (type, key) => {
-    return {
-      value: `${type.emojiCode} ${key}`,
-      name: `${type.emoji} ${key}:\t${type.description}`,
-    };
-  });
+  const choices = getChoices();
 
   return {
     // When a user runs `git cz`, prompter will
