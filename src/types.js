@@ -3,6 +3,7 @@ import cloneDeep from "lodash.clonedeep";
 import each from "lodash.foreach";
 import includes from "lodash.includes";
 import map from "lodash.map";
+import longest from "longest";
 
 export const typesRaw = {
   feat: {
@@ -65,24 +66,38 @@ export const typesRaw = {
   },
 };
 
-export function getChoices() {
+export function getChoices(startWithGitmoji = true) {
   const types = cloneDeep(typesRaw);
-  each(Object.entries(types), ([key, type]) => {
-    const gitmoji = gitmojis.find((gitmoji) => gitmoji.code === type.emojiCode);
 
-    if (!gitmoji) {
-      throw new Error(`Gitmoji not found for ${type.emojiCode}`);
-    } else if (includes([":recycle:", ":pencil2:"], type.emojiCode)) {
-      gitmoji.emoji = `${gitmoji.emoji} `;
-    }
+  if (startWithGitmoji) {
+    each(Object.entries(types), ([key, type]) => {
+      const gitmoji = gitmojis.find(
+        (gitmoji) => gitmoji.code === type.emojiCode
+      );
 
-    types[key].emoji = gitmoji.emoji;
-  });
+      if (!gitmoji) {
+        throw new Error(`Gitmoji not found for ${type.emojiCode}`);
+      } else if (includes([":recycle:", ":pencil2:"], type.emojiCode)) {
+        gitmoji.emoji = `${gitmoji.emoji} `;
+      }
 
-  return map(types, (type, key) => {
-    return {
-      value: `${type.emojiCode} ${key}`,
-      name: `${type.emoji} ${key}:\t${type.description}`,
-    };
-  });
+      types[key].emoji = gitmoji.emoji;
+    });
+
+    return map(types, (type, key) => {
+      return {
+        value: `${type.emojiCode} ${key}`,
+        name: `${type.emoji} ${key}:\t${type.description}`,
+      };
+    });
+  } else {
+    const long = longest(Object.keys(types)).length + 3;
+
+    return map(types, (type, key) => {
+      return {
+        value: `${key}`,
+        name: `${`${key}:`.padEnd(long)}${type.description}`,
+      };
+    });
+  }
 }

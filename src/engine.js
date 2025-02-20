@@ -28,8 +28,8 @@ const filterEmptyAnswer = (subject) => {
   return subject;
 };
 
-export default () => {
-  const choices = getChoices();
+export default (startWithGitmoji = true) => {
+  const choices = getChoices(startWithGitmoji);
 
   return {
     // When a user runs `git cz`, prompter will
