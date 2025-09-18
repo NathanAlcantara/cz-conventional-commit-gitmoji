@@ -94,6 +94,21 @@ export default (startWithGitmoji = true) => {
         },
         {
           type: "confirm",
+          name: "haveCommitBody",
+          message:
+            "Do you want to add a longer description into your commit body?",
+          default: false,
+        },
+        {
+          type: "editor",
+          name: "commitBody",
+          message: "Write a description to be added into your commit body ",
+          when: (answers) => {
+            return answers.haveCommitBody;
+          },
+        },
+        {
+          type: "confirm",
           name: "isBreaking",
           message: "Are there any breaking changes?",
           default: false,
@@ -148,6 +163,8 @@ export default (startWithGitmoji = true) => {
         // Hard limit this line in the validate
         const head = answers.type + ": " + answers.subject;
 
+        let body = answers.commitBody ? answers.commitBody : "";
+
         // Apply breaking change prefix
         let breaking = answers.isBreaking
           ? `BREAKING CHANGE: ${answers.breaking}`
@@ -159,7 +176,7 @@ export default (startWithGitmoji = true) => {
           : "";
         issues = issues ? wrap(issues, wrapOptions) : false;
 
-        commit(filter([head, breaking, issues]).join("\n\n"));
+        commit(filter([head, body, breaking, issues]).join("\n\n"));
       });
     },
   };
