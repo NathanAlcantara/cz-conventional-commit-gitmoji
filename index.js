@@ -2,6 +2,7 @@ import commitlintLoad from "@commitlint/load";
 import engine from "./src/engine.js";
 
 let startWithGitmoji = true;
+let cardTracker = "jira";
 
 const clConfig = await commitlintLoad();
 if (clConfig.rules) {
@@ -15,4 +16,9 @@ if (clConfig.rules) {
   }
 }
 
-export default engine(startWithGitmoji);
+if (clConfig.parserPreset?.parserOpts?.cardTracker) {
+  cardTracker = clConfig.parserPreset.parserOpts.cardTracker;
+}
+
+
+export default engine(startWithGitmoji, cardTracker);
