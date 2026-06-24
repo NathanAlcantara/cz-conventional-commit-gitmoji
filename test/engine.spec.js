@@ -10,6 +10,7 @@ const subject = "testing123";
 const longSubject =
   "testing123 testing123 testing123 testing123 testing123 testing123 testing123 testing123 testing123";
 
+// Jira
 const affectIssues = "AFFECTED ISSUES: ";
 const issues = "#ISSUE-123, #ISSUES-4321";
 const longIssues =
@@ -24,6 +25,10 @@ const longIssuesSplit =
   longIssues.slice(affectIssuesWidthLine1, affectIssuesWidthLine2).trim() +
   "\n" +
   longIssues.slice(affectIssuesWidthLine2, longIssues.length).trim();
+
+// Azure Boards
+const affectWorkItems = "AFFECTED WORK ITEMS: ";
+const workItems = "AB#123, AB#456";
 
 const breakingChange = "BREAKING CHANGE: ";
 const breaking = "asdhdfkjhbakjdhjkashd adhfajkhs asdhkjdsh ahshd";
@@ -58,8 +63,8 @@ describe("engine", function () {
         commitMessage({
           type,
           subject,
-          isIssuesAffected: true,
-          issues,
+          isCardAffected: true,
+          cards: issues,
         }),
       ).to.equal(`${type}: ${subject}\n\n${affectIssues}${issues}`);
     });
@@ -69,8 +74,8 @@ describe("engine", function () {
         commitMessage({
           type,
           subject,
-          isIssuesAffected: true,
-          issues: longIssues,
+          isCardAffected: true,
+          cards: longIssues,
         }),
       ).to.equal(`${type}: ${subject}\n\n${affectIssues}${longIssuesSplit}`);
     });
@@ -106,8 +111,8 @@ describe("engine", function () {
           subject,
           isBreaking: true,
           breaking,
-          isIssuesAffected: true,
-          issues,
+          isCardAffected: true,
+          cards: issues,
         }),
       ).to.equal(
         `${type}: ${subject}\n\n${breakingChange}${breaking}\n\n${affectIssues}${issues}`,
@@ -121,12 +126,59 @@ describe("engine", function () {
           subject,
           isBreaking: true,
           breaking: longBreaking,
-          isIssuesAffected: true,
-          issues: longIssues,
+          isCardAffected: true,
+          cards: longIssues,
         }),
       ).to.equal(
         `${type}: ${subject}\n\n${breakingChange}${longBreakingSplit}\n\n${affectIssues}${longIssuesSplit}`,
       );
+    });
+
+    describe("azure boards", function () {
+      it("header and work items", function () {
+        expect(
+          commitMessage(
+            {
+              type,
+              subject,
+              isCardAffected: true,
+              cards: workItems,
+            },
+            true,
+            "azureboards",
+          ),
+        ).to.equal(`${type}: ${subject}\n\n${affectWorkItems}${workItems}`);
+      });
+    });
+
+    describe("no tracker", function () {
+      it("header only, card prompts skipped", function () {
+        expect(
+          commitMessage(
+            {
+              type,
+              subject,
+            },
+            true,
+            "none",
+          ),
+        ).to.equal(`${type}: ${subject}`);
+      });
+
+      it("breaking change, no card output", function () {
+        expect(
+          commitMessage(
+            {
+              type,
+              subject,
+              isBreaking: true,
+              breaking,
+            },
+            true,
+            "none",
+          ),
+        ).to.equal(`${type}: ${subject}\n\n${breakingChange}${breaking}`);
+      });
     });
   });
 
@@ -148,11 +200,11 @@ describe("engine", function () {
         }),
       ).to.throw(
         "length must be less than or equal to " +
-          `${maxLineWidth - (type.length + 2)}`,
+        `${maxLineWidth - (type.length + 2)}`,
       );
     });
 
-    it("empty braking change description", function () {
+    it("empty breaking change description", function () {
       expect(() =>
         commitMessage({
           type,
@@ -163,26 +215,56 @@ describe("engine", function () {
       ).to.throw("description is required");
     });
 
-    it("empty issue", function () {
+    it("empty issue (jira)", function () {
       expect(() =>
         commitMessage({
           type,
           subject,
-          isIssuesAffected: true,
-          issues: "",
+          isCardAffected: true,
+          cards: "",
         }),
-      ).to.throw("issues are required");
+      ).to.throw("Issue is required");
     });
 
-    it("issues invalid", function () {
+    it("issue invalid format (jira)", function () {
       expect(() =>
         commitMessage({
           type,
           subject,
-          isIssuesAffected: true,
-          issues: "invalid",
+          isCardAffected: true,
+          cards: "invalid",
         }),
-      ).to.throw("issues must be in the format");
+      ).to.throw("Issue must be in the format");
+    });
+
+    it("empty work item (azureboards)", function () {
+      expect(() =>
+        commitMessage(
+          {
+            type,
+            subject,
+            isCardAffected: true,
+            cards: "",
+          },
+          true,
+          "azureboards",
+        ),
+      ).to.throw("Work Item is required");
+    });
+
+    it("work item invalid format (azureboards)", function () {
+      expect(() =>
+        commitMessage(
+          {
+            type,
+            subject,
+            isCardAffected: true,
+            cards: "invalid",
+          },
+          true,
+          "azureboards",
+        ),
+      ).to.throw("Work Item must be in the format");
     });
   });
 
@@ -203,12 +285,12 @@ describe("engine", function () {
       expect(questionDefault("breaking")).to.be.undefined;
     });
 
-    it("has affected issue default", function () {
-      expect(questionDefault("isIssuesAffected")).to.be.true;
+    it("has affected card default (jira)", function () {
+      expect(questionDefault("isCardAffected")).to.be.true;
     });
 
-    it("issues default", function () {
-      expect(questionDefault("issues")).to.be.undefined;
+    it("cards default", function () {
+      expect(questionDefault("cards")).to.be.undefined;
     });
   });
 
@@ -261,23 +343,35 @@ describe("engine", function () {
       ).to.be.true;
     });
 
-    it("issues by default", function () {
-      expect(questionWhen("issues", {})).to.be.undefined;
+    it("cards by default (jira)", function () {
+      expect(questionWhen("cards", {})).to.be.undefined;
     });
 
-    it("issues when isIssuesAffected", function () {
+    it("cards when isCardAffected (jira)", function () {
       expect(
-        questionWhen("issues", {
-          isIssuesAffected: true,
+        questionWhen("cards", {
+          isCardAffected: true,
         }),
       ).to.be.true;
     });
   });
+
+  describe("no tracker prompts", function () {
+    it("isCardAffected prompt not present when cardTracker is none", function () {
+      const questions = getQuestions(true, "none");
+      expect(questions.find((q) => q.name === "isCardAffected")).to.be.undefined;
+    });
+
+    it("cards prompt not present when cardTracker is none", function () {
+      const questions = getQuestions(true, "none");
+      expect(questions.find((q) => q.name === "cards")).to.be.undefined;
+    });
+  });
 });
 
-function commitMessage(answers) {
+function commitMessage(answers, startWithGitmoji = true, cardTracker = "jira") {
   let result = null;
-  engine().prompter(
+  engine(startWithGitmoji, cardTracker).prompter(
     {
       prompt: (questions) => {
         return {
@@ -306,7 +400,7 @@ function processQuestions(questions, answers) {
     if (validation !== true) {
       throw new Error(
         validation ||
-          `Answer '${answer}' to question '${question.name}' was invalid`,
+        `Answer '${answer}' to question '${question.name}' was invalid`,
       );
     }
     if (question.filter && answer) {
@@ -315,21 +409,21 @@ function processQuestions(questions, answers) {
   }
 }
 
-function getQuestions() {
+function getQuestions(startWithGitmoji = true, cardTracker = "jira") {
   let result = null;
-  engine().prompter({
+  engine(startWithGitmoji, cardTracker).prompter({
     prompt: (questions) => {
       result = questions;
       return {
-        then: () => {},
+        then: () => { },
       };
     },
   });
   return result;
 }
 
-function getQuestion(name) {
-  const questions = getQuestions();
+function getQuestion(name, startWithGitmoji = true, cardTracker = "jira") {
+  const questions = getQuestions(startWithGitmoji, cardTracker);
   for (const i in questions) {
     if (questions[i].name === name) {
       return questions[i];
@@ -338,32 +432,32 @@ function getQuestion(name) {
   return false;
 }
 
-function questionPrompt(name, answers) {
-  const question = getQuestion(name);
+function questionPrompt(name, answers, startWithGitmoji = true, cardTracker = "jira") {
+  const question = getQuestion(name, startWithGitmoji, cardTracker);
   return question.message && typeof question.message === "string"
     ? question.message
     : question.message(answers);
 }
 
-function questionTransformation(name, answers) {
-  const question = getQuestion(name);
+function questionTransformation(name, answers, startWithGitmoji = true, cardTracker = "jira") {
+  const question = getQuestion(name, startWithGitmoji, cardTracker);
   return question.transformer && question.transformer(answers[name], answers);
 }
 
-function questionFilter(name, answer) {
-  const question = getQuestion(name);
+function questionFilter(name, answer, startWithGitmoji = true, cardTracker = "jira") {
+  const question = getQuestion(name, startWithGitmoji, cardTracker);
   return (
     question.filter &&
     question.filter(typeof answer === "string" ? answer : answer[name])
   );
 }
 
-function questionDefault(name) {
-  const question = getQuestion(name);
+function questionDefault(name, startWithGitmoji = true, cardTracker = "jira") {
+  const question = getQuestion(name, startWithGitmoji, cardTracker);
   return question.default;
 }
 
-function questionWhen(name, answers) {
-  const question = getQuestion(name);
+function questionWhen(name, answers, startWithGitmoji = true, cardTracker = "jira") {
+  const question = getQuestion(name, startWithGitmoji, cardTracker);
   return question.when(answers);
 }
