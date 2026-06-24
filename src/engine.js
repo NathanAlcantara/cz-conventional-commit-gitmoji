@@ -16,6 +16,19 @@ const maxSummaryLength = (answers) => {
   return 100 - headerLength(answers);
 };
 
+const cardTrackerConfig = {
+  jira: {
+    placeholder: '"#PROJ-123, #PROJ-456"',
+    matcher: /#([A-Z][A-Z0-9]+-[0-9]+)/g,
+    cardName: "Issue",
+  },
+  azureboards: {
+    placeholder: '"AB#123, AB#456"',
+    matcher: /AB#(\d+)/g,
+    cardName: "Work Item",
+  },
+}
+
 const filterEmptyAnswer = (subject) => {
   subject = subject.trim();
   if (subject.charAt(0).toLowerCase() !== subject.charAt(0)) {
@@ -28,8 +41,11 @@ const filterEmptyAnswer = (subject) => {
   return subject;
 };
 
-export default (startWithGitmoji = true) => {
+export default (startWithGitmoji = true, cardTracker = "jira") => {
   const choices = getChoices(startWithGitmoji);
+  const tracker = cardTracker === "none" || !cardTracker
+    ? null
+    : cardTrackerConfig[cardTracker] ?? cardTrackerConfig.jira;
 
   return {
     // When a user runs `git cz`, prompter will
@@ -75,10 +91,10 @@ export default (startWithGitmoji = true) => {
               : filteredSubject.length <= maxSummaryLength(answers)
                 ? true
                 : "Subject length must be less than or equal to " +
-                  maxSummaryLength(answers) +
-                  " characters. Current length is " +
-                  filteredSubject.length +
-                  " characters.";
+                maxSummaryLength(answers) +
+                " characters. Current length is " +
+                filteredSubject.length +
+                " characters.";
           },
           transformer: (subject, answers) => {
             const filteredSubject = filterEmptyAnswer(subject);
@@ -128,29 +144,28 @@ export default (startWithGitmoji = true) => {
           },
         },
 
-        {
-          type: "confirm",
-          name: "isIssuesAffected",
-          message: "Does this change affect any open issues?",
-          default: true,
-        },
-        {
-          type: "input",
-          name: "issues",
-          message: 'Add issue references (e.g. "#ISSUE-123, #ISSUE-543".):\n',
-          when: (answers) => {
-            return answers.isIssuesAffected;
+        ...(tracker ? [
+          {
+            type: "confirm",
+            name: "isCardAffected",
+            message: `Does this change affect any open ${tracker.cardName.toLowerCase()}s?`,
+            default: true,
           },
-          validate: (issues) => {
-            const filteredIssues = filterEmptyAnswer(issues);
-            const jiraMatcher = /#([A-Z][A-Z0-9]+-[0-9]+)/g;
-            return filteredIssues.length == 0
-              ? "issues are required"
-              : issues.match(jiraMatcher)
-                ? true
-                : 'issues must be in the format "#ISSUE-123, #ISSUE-543"';
+          {
+            type: "input",
+            name: "cards",
+            message: `Add ${tracker.cardName.toLowerCase()} references (e.g. ${tracker.placeholder}):\n`,
+            when: (answers) => answers.isCardAffected,
+            validate: (cards) => {
+              const filteredCards = filterEmptyAnswer(cards);
+              return filteredCards.length == 0
+                ? `${tracker.cardName} is required`
+                : cards.match(tracker.matcher)
+                  ? true
+                  : `${tracker.cardName} must be in the format ${tracker.placeholder}`;
+            },
           },
-        },
+        ] : []),
       ]).then((answers) => {
         const wrapOptions = {
           trim: true,
@@ -171,12 +186,12 @@ export default (startWithGitmoji = true) => {
           : "";
         breaking = breaking ? wrap(breaking, wrapOptions) : false;
 
-        let issues = answers.isIssuesAffected
-          ? `AFFECTED ISSUES: ${answers.issues}`
+        let cards = tracker && answers.isCardAffected
+          ? `AFFECTED ${tracker.cardName.toUpperCase()}S: ${answers.cards}`
           : "";
-        issues = issues ? wrap(issues, wrapOptions) : false;
+        cards = cards ? wrap(cards, wrapOptions) : false;
 
-        commit(filter([head, body, breaking, issues]).join("\n\n"));
+        commit(filter([head, body, breaking, cards]).join("\n\n"));
       });
     },
   };
